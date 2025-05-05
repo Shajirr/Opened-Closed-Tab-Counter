@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Opened & Closed Tab Counter",
+  "version": "2025.5.4",
+  "description": "Counts opened and closed tabs, resetting daily, displaying delta in badge, details on hover, and history in popup",
+  "permissions": [
+    "storage",
+    "tabs",
+    "alarms"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_icon": "icon.svg",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "24": "icon.svg",
+    "32": "icon.svg",
+    "48": "icon.svg"
+  }
+}

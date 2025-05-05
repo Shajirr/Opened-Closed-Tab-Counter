@@ -1,0 +1,41 @@
+body {
+  width: 200px;
+  margin: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px;
+  text-align: left;
+}
+
+th:nth-child(2), td:nth-child(2) {
+  text-align: center;
+}
+
+th {
+  background-color: #f0f0f0;
+}
+
+tfoot td {
+  font-weight: bold;
+}
+
+.positive {
+  color: red;
+}
+
+.negative {
+  color: green;
+}
+
+.zero {
+  color: gray;
+}
