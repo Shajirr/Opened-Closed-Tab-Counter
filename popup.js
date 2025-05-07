@@ -1,3 +1,7 @@
+// Send message to background to check for date change 
+browser.runtime.sendMessage({ action: "checkDateChange" });
+
+// After date check, load and display data
 browser.storage.local.get(["tabData", "deltaHistory"])
   .then((result) => {
     const tabData = result.tabData || { date: "", opened: 0, closed: 0 };
@@ -7,7 +11,7 @@ browser.storage.local.get(["tabData", "deltaHistory"])
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const today = `${year}-${month}-${day}`;
-    console.log("Popup calculated today:", today);
+    //console.log("Popup calculated today:", today);
     const historyBody = document.getElementById("history-body");
     const deltaSum = document.getElementById("delta-sum");
 
@@ -15,12 +19,12 @@ browser.storage.local.get(["tabData", "deltaHistory"])
     const currentDelta = tabData.opened - tabData.closed;
     // Filter invalid entries (e.g., missing date)
     const entries = [{ date: today, delta: currentDelta }, ...deltaHistory.filter(entry => entry.date)];
-    console.log("Popup entries:", entries);
+    //console.log("Popup entries:", entries);
 
     // Sort by date descending and limit to 7 entries
     entries.sort((a, b) => new Date(b.date) - new Date(a.date));
     const uniqueEntries = entries.slice(0, 7); // Keep only 7 latest entries
-    console.log("Popup unique entries:", uniqueEntries);
+    //console.log("Popup unique entries:", uniqueEntries);
 
     // Populate table
     historyBody.innerHTML = "";
@@ -31,9 +35,16 @@ browser.storage.local.get(["tabData", "deltaHistory"])
       const dateObj = new Date(entry.date);
       const dayShorthand = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][dateObj.getDay()];
       const formattedDate = `${entry.date.replace(/-/g, '.')}`;
-      dateCell.textContent = `${dayShorthand} (${formattedDate})`;
+      // Add "(Today)" label for current day
+      dateCell.textContent = entry.date === today 
+        ? `${dayShorthand} (${formattedDate}) \u25C0`
+        : `${dayShorthand} (${formattedDate})`;
       deltaCell.textContent = entry.delta;
       deltaCell.className = entry.delta > 0 ? "positive" : entry.delta < 0 ? "negative" : "zero";
+      // Apply current-day class if this is today
+      if (entry.date === today) {
+        row.className = "current-day";
+      }
       row.appendChild(dateCell);
       row.appendChild(deltaCell);
       historyBody.appendChild(row);

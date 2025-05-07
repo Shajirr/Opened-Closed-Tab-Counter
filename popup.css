@@ -39,3 +39,7 @@ tfoot td {
 .zero {
   color: gray;
 }
+
+.current-day {
+  font-weight: bold;
+}

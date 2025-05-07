@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Opened & Closed Tab Counter",
-  "version": "2025.5.6",
-  "description": "Counts daily opened and closed tabs, displaying delta in addon badge, details on addon icon hover, and history in a popup",
+  "version": "2025.5.7",
+  "description": "Counts daily opened and closed tabs, displaying count delta in the addon badge, more details on addon icon hover, and count delta history in a popup",
   "permissions": [
     "storage",
     "tabs",
