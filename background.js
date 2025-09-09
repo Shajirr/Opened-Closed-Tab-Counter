@@ -1,6 +1,20 @@
 let tabData = { date: "", opened: 0, closed: 0 }; // Initialize early to avoid undefined
 let deltaHistory = []; // Store final deltas for up to 7 days
 
+// Grace period to avoid counting tabs during browser startup/restoration
+let gracePeriodActive = true; // Track if grace period is still active
+const GRACE_PERIOD_MS = 20000; // 20 seconds grace period
+
+// Set timer to end grace period after GRACE_PERIOD_MS seconds
+setTimeout(() => {
+  gracePeriodActive = false;
+  //console.log("Grace period ended, tab tracking is now active");
+}, GRACE_PERIOD_MS);
+
+function isInGracePeriod() {
+  return (Date.now() - extensionStartTime) < GRACE_PERIOD_MS;
+}
+
 function updateBadgeAndTooltip() {
   if (!tabData) {
     console.error("tabData is undefined");
@@ -84,6 +98,10 @@ function checkAndHandleDateChange() {
 }
 
 browser.tabs.onCreated.addListener(() => {
+  if (gracePeriodActive) {
+    //console.log("Tab created during grace period, ignoring");
+    return;
+  }
   //console.log("Tab created event detected");
   tabData.opened++;
   browser.storage.local.set({ tabData })
@@ -95,6 +113,10 @@ browser.tabs.onCreated.addListener(() => {
 });
 
 browser.tabs.onRemoved.addListener(() => {
+  if (gracePeriodActive) {
+    //console.log("Tab removed during grace period, ignoring");
+    return;
+  }
   //console.log("Tab removed event detected");
   tabData.closed++;
   browser.storage.local.set({ tabData })
