@@ -1,15 +1,42 @@
-let tabData = { date: "", opened: 0, closed: 0 }; // Initialize early to avoid undefined
+let tabData = { date: "", opened: 0, closed: 0 };
 let deltaHistory = []; // Store final deltas for up to 7 days
 
 // Grace period to avoid counting tabs during browser startup/restoration
 let gracePeriodActive = true; // Track if grace period is still active
-const GRACE_PERIOD_MS = 20000; // 20 seconds grace period
+const GRACE_PERIOD_MS = 25000; // grace period (ms)
+const VALIDATION_DELAY_MS = 20000 // startup data validation delay (ms)
+const VALIDATION_DELTA = 20 // tab delta used for startup data validation
+
+// Variables to store the initial state for validation
+let initialOpened = 0;
+let initialClosed = 0;
 
 // Set timer to end grace period after GRACE_PERIOD_MS seconds
 setTimeout(() => {
   gracePeriodActive = false;
   //console.log("Grace period ended, tab tracking is now active");
 }, GRACE_PERIOD_MS);
+
+// Validation check VALIDATION_DELAY_MS seconds after grace period ends
+setTimeout(verifyStartupData, GRACE_PERIOD_MS + VALIDATION_DELAY_MS);
+
+function verifyStartupData() {
+  const currentDelta = tabData.opened - tabData.closed;
+  const recordedDelta = initialOpened - initialClosed;
+
+  // Check if delta changed by VALIDATION_DELTA during the startup phase
+  if (Math.abs(currentDelta - recordedDelta) > VALIDATION_DELTA) {
+    console.warn("Invalid startup data detected, session restore tabs might have been counted. Resetting to recorded delta.");
+    
+    // Reset counts to the values recorded at startup
+    tabData.opened = initialOpened;
+    tabData.closed = initialClosed;
+    
+    browser.storage.local.set({ tabData })
+      .then(() => updateBadgeAndTooltip())
+      .catch((error) => console.error(`Failed to reset tabData: ${error}`));
+  }
+}
 
 function isInGracePeriod() {
   return (Date.now() - extensionStartTime) < GRACE_PERIOD_MS;
@@ -97,6 +124,8 @@ function checkAndHandleDateChange() {
   scheduleMidnightReset();
 }
 
+// -- Event Listeners --
+
 browser.tabs.onCreated.addListener(() => {
   if (gracePeriodActive) {
     //console.log("Tab created during grace period, ignoring");
@@ -133,22 +162,51 @@ browser.storage.local.get(["tabData", "deltaHistory"])
     //console.log("Loaded data:", result);
     tabData = result.tabData || { date: "", opened: 0, closed: 0 };
     deltaHistory = result.deltaHistory || [];
+    
+    // Handle date change before recording initial state
     checkAndHandleDateChange();
+    
+    // Capture the baseline counts for the startup check
+    initialOpened = tabData.opened;
+    initialClosed = tabData.closed;
   })
   .catch((error) => console.error(`Failed to load tabData or deltaHistory: ${error}`));
-
-// Listen for messages from popup
-browser.runtime.onMessage.addListener((message) => {
-  if (message.action === "checkDateChange") {
-    //console.log("Received checkDateChange message from popup");
-    checkAndHandleDateChange();
-  }
-});
 
 // Reset at midnight
 browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "midnightReset") {
     //console.log("Midnight reset triggered");
     checkAndHandleDateChange();
+  }
+});
+
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "checkDateChange") {
+    //console.log("Received checkDateChange message from popup");
+    checkAndHandleDateChange();
+    sendResponse({ status: "checked" });
+  } 
+  else if (message.action === "clearDailyCount") {
+    if (tabData.date === message.date) {
+      // Reset current day
+      tabData.opened = 0;
+      tabData.closed = 0;
+      browser.storage.local.set({ tabData }).then(() => {
+        updateBadgeAndTooltip();
+        sendResponse({ success: true });
+      });
+    } else {
+      // Reset historical day: find the entry and set delta to 0
+      deltaHistory = deltaHistory.map(entry => {
+        if (entry.date === message.date) {
+          return { ...entry, delta: 0 };
+        }
+        return entry;
+      });
+      browser.storage.local.set({ deltaHistory }).then(() => {
+        sendResponse({ success: true });
+      });
+    }
+    return true; // Keep async channel open
   }
 });

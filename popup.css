@@ -1,5 +1,5 @@
 body {
-  width: 200px;
+  width: 225px;
   margin: 10px;
   font-family: Arial, sans-serif;
   font-size: 14px;
@@ -24,6 +24,12 @@ th {
   background-color: #f0f0f0;
 }
 
+/* Action column */
+td:nth-child(3) {
+  text-align: center;
+  width: 20px;
+}
+
 tfoot td {
   font-weight: bold;
 }
@@ -43,3 +49,37 @@ tfoot td {
 .current-day {
   font-weight: bold;
 }
+
+/* Base button */
+.clear-btn {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #999;
+  cursor: pointer;
+  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s;
+}
+
+/* 1s Cooldown state - User just clicked once */
+.clear-btn.cooling {
+  background-color: #f0f0f0;
+  cursor: wait;
+  opacity: 0.5;
+}
+
+/* 2s Armed state - Clicking now triggers reset */
+.clear-btn.armed {
+  background-color: #ff4444;
+  border-color: #cc0000;
+  color: white;
+  font-weight: bold;
+}
+
+.clear-btn:hover:not(.cooling):not(.armed) {
+  border-color: #999;
+  color: #666;
+}
+

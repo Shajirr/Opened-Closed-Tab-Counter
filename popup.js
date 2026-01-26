@@ -32,21 +32,69 @@ browser.storage.local.get(["tabData", "deltaHistory"])
       const row = document.createElement("tr");
       const dateCell = document.createElement("td");
       const deltaCell = document.createElement("td");
+      const actionCell = document.createElement("td");
+      
       const dateObj = new Date(entry.date);
       const dayShorthand = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][dateObj.getDay()];
       const formattedDate = `${entry.date.replace(/-/g, '.')}`;
+      
       // Add "(Today)" label for current day
       dateCell.textContent = entry.date === today 
         ? `${dayShorthand} (${formattedDate}) \u25C0`
         : `${dayShorthand} (${formattedDate})`;
       deltaCell.textContent = entry.delta;
       deltaCell.className = entry.delta > 0 ? "positive" : entry.delta < 0 ? "negative" : "zero";
+      
+      // Create the Clear Button
+      const clearBtn = document.createElement("button");
+      clearBtn.textContent = "\u2716"; // Unicode for heavy X
+      clearBtn.className = "clear-btn";
+      let clickState = "idle";   
+      
       // Apply current-day class if this is today
       if (entry.date === today) {
         row.className = "current-day";
       }
+      // Clear button two-stage reset logic
+      clearBtn.onclick = () => {
+        if (clickState === "idle") {
+          // Stage 1: Enter cooldown (inactive)
+          clickState = "cooling";
+          clearBtn.disabled = true;
+          clearBtn.classList.add("cooling");
+          
+          setTimeout(() => {
+            // Stage 2: Enter Armed window (active & red)
+            clickState = "armed";
+            clearBtn.disabled = false;
+            clearBtn.classList.remove("cooling");
+            clearBtn.classList.add("armed");
+            
+            const resetTimer = setTimeout(() => {
+              // Revert if not clicked in time
+              clickState = "idle";
+              clearBtn.classList.remove("armed");
+            }, 2000);
+
+            // Store timer on element to clear if clicked
+            clearBtn.dataset.timerId = resetTimer;
+          }, 2000);
+
+        } else if (clickState === "armed") {
+          // Stage 3: Confirmed click
+          clearTimeout(clearBtn.dataset.timerId);
+          browser.runtime.sendMessage({ 
+            action: "clearDailyCount", 
+            date: entry.date 
+          }).then(() => {
+            location.reload();
+          });
+        }
+      };
+      actionCell.appendChild(clearBtn);
       row.appendChild(dateCell);
       row.appendChild(deltaCell);
+      row.appendChild(actionCell);
       historyBody.appendChild(row);
     }
 
