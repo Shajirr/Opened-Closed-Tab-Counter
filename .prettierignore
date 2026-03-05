@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+.bun/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Manifests and lockfiles
+bun.lock
+package-lock.json
+
+# Minified files
+*.min.js
+*.min.css
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,4 +1,4 @@
-let tabData = { date: "", opened: 0, closed: 0 };
+let tabData = { date: '', opened: 0, closed: 0 };
 let deltaHistory = []; // Store final deltas for up to 7 days
 
 // Grace period to avoid counting tabs during browser startup/restoration
@@ -19,18 +19,18 @@ function waitForTabCountToStabilize(previousCount = -1, stableRounds = 0) {
       stableRounds = 0;
     }
     return new Promise((r) => setTimeout(r, STABILITY_INTERVAL_MS)).then(() =>
-      waitForTabCountToStabilize(tabs.length, stableRounds)
+      waitForTabCountToStabilize(tabs.length, stableRounds),
     );
   });
 }
 
 function updateBadgeAndTooltip() {
   if (!tabData) {
-    console.error("tabData is undefined");
+    console.error('tabData is undefined');
     return;
   }
   let delta = tabData.opened - tabData.closed;
-  let color = delta < 0 ? "green" : delta > 0 ? "red" : "gray";
+  let color = delta < 0 ? 'green' : delta > 0 ? 'red' : 'gray';
   let tooltip = `\u0394 ${delta} / +${tabData.opened} / -${tabData.closed}`;
 
   browser.browserAction
@@ -61,7 +61,9 @@ function scheduleMidnightReset() {
     let midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0); // Next midnight
     let timeUntilMidnight = midnight - now;
-    browser.alarms.create("midnightReset", { delayInMinutes: timeUntilMidnight / 60000 });
+    browser.alarms.create('midnightReset', {
+      delayInMinutes: timeUntilMidnight / 60000,
+    });
     //console.log("Midnight reset alarm scheduled for:", midnight);
   } catch (error) {
     console.error(`Failed to schedule midnight reset alarm: ${error}`);
@@ -86,8 +88,8 @@ function saveFinalDelta(previousDate) {
 function checkAndHandleDateChange() {
   const now = new Date();
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
   const today = `${year}-${month}-${day}`;
   //console.log("Calculated today:", today);
 
@@ -147,10 +149,10 @@ browser.tabs.onRemoved.addListener(() => {
 
 // Initialize on startup
 browser.storage.local
-  .get(["tabData", "deltaHistory"])
+  .get(['tabData', 'deltaHistory'])
   .then((result) => {
     //console.log("Loaded data:", result);
-    tabData = result.tabData || { date: "", opened: 0, closed: 0 };
+    tabData = result.tabData || { date: '', opened: 0, closed: 0 };
     deltaHistory = result.deltaHistory || [];
 
     // Handle date change before recording initial state
@@ -160,18 +162,18 @@ browser.storage.local
 
 // Reset at midnight
 browser.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "midnightReset") {
+  if (alarm.name === 'midnightReset') {
     //console.log("Midnight reset triggered");
     checkAndHandleDateChange();
   }
 });
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "checkDateChange") {
+  if (message.action === 'checkDateChange') {
     //console.log("Received checkDateChange message from popup");
     checkAndHandleDateChange();
-    sendResponse({ status: "checked" });
-  } else if (message.action === "clearDailyCount") {
+    sendResponse({ status: 'checked' });
+  } else if (message.action === 'clearDailyCount') {
     if (tabData.date === message.date) {
       // Reset current day
       tabData.opened = 0;
@@ -192,6 +194,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true });
       });
     }
+
     return true; // Keep async channel open
   }
 });
