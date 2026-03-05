@@ -1,14 +1,16 @@
 {
   "manifest_version": 2,
   "name": "Opened & Closed Tab Counter",
-  "version": "2026.1.26",
+  "version": "2026.3.5",
   "description": "Counts daily opened and closed tabs, displaying count delta in the addon badge, more details on addon icon hover, and count delta history in a popup",
   
   "browser_specific_settings": {
     "gecko": {
       "id": "{e5292467-a0c9-4854-982b-6a12aaf21609}",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   },
@@ -20,7 +22,9 @@
   ],
   
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   
   "browser_action": {

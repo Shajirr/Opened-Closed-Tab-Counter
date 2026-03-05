@@ -7,10 +7,6 @@ const STARTUP_DELAY_MS = 30000; // wait before polling begins
 const STABILITY_CHECKS = 3; // consecutive stable readings required
 const STABILITY_INTERVAL_MS = 1500;
 
-// Variables to store the initial state for validation
-let initialOpened = 0;
-let initialClosed = 0;
-
 function waitForTabCountToStabilize(previousCount = -1, stableRounds = 0) {
   return browser.tabs.query({}).then((tabs) => {
     if (tabs.length === previousCount) {
