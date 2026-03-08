@@ -146,16 +146,23 @@ browser.tabs.onCreated.addListener(() => {
   updateBadgeAndTooltip();
 });
 
-browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
+browser.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   if (startupCounterPause) {
     logDebug('Tab removed during counter startup pause, ignoring');
     return;
   }
 
-  // Ignore tabs that are closing because the whole window/browser is shutting down
+  // On window close event, ignore closed tabs if its the last window, as this means a browser shutdown
   if (removeInfo.isWindowClosing) {
-    logDebug('Tab removed due to window closing, ignoring');
-    return;
+    const allWindows = await browser.windows.getAll();
+
+    // Check if any open window is NOT the one currently closing
+    const otherWindowsExist = allWindows.some((window) => window.id !== removeInfo.windowId);
+
+    if (!otherWindowsExist) {
+      logDebug('Final window closing (browser shutdown), ignoring tab removals');
+      return;
+    }
   }
 
   logDebug('Tab removed event detected');
